@@ -17,20 +17,24 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
     {
         return 2;
     }
-
     protected function getStats(): array
     {
         $date = ClientPerKlant::query()->latest()->first();
-//        dd($date);
-        $latestYear = explode('-', $date->recorded_month)[0];
-        $latestMonth = explode('-', $date->recorded_month)[1];
+        if ($date) {
+            $latestYear = explode('-', $date->recorded_month)[0];
+            $latestMonth = explode('-', $date->recorded_month)[1];
 
-        $totalActieveKlanten = ClientPerKlant::whereYear('recorded_month', $latestYear)
-            ->whereMonth('recorded_month', $latestMonth)
-            ->where('aantal_inactieve_klanten', 0)->count();
-        $totalActieveClienten = ClientPerKlant::whereYear('recorded_month', $latestYear)
-            ->whereMonth('recorded_month', $latestMonth)
-            ->where('aantal_inactieve_klanten', 0)->sum('aantal_actieve_clienten');
+            $totalActieveKlanten = ClientPerKlant::whereYear('recorded_month', $latestYear)
+                ->whereMonth('recorded_month', $latestMonth)
+                ->where('aantal_inactieve_klanten', 0)->count();
+            $totalActieveClienten = ClientPerKlant::whereYear('recorded_month', $latestYear)
+                ->whereMonth('recorded_month', $latestMonth)
+                ->where('aantal_inactieve_klanten', 0)->sum('aantal_actieve_clienten');
+        }else{
+            $totalActieveKlanten = 0;
+            $totalActieveClienten = 0;
+        }
+
         return [
             Stat::make('Actieve Clienten',  $totalActieveClienten)
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
