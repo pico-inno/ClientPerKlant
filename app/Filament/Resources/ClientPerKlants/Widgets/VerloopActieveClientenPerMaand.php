@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\ClientPerKlants\Widgets;
 
+use App\Filament\Imports\ClientPerKlantImporter;
 use App\Models\ClientPerKlant;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\ImportAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;

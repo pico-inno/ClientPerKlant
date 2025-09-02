@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\ClientPerKlants\ClientPerKlantsResource;
+use App\Filament\Resources\ClientPerKlants\Pages\ClientPerKlantImportPage;
 use App\Filament\Resources\ClientPerKlants\Widgets\AantalActieveClientenPerMaandenJaar;
 use App\Filament\Resources\ClientPerKlants\Widgets\AantalActieveKlantenPerMaandenJaar;
 use App\Filament\Resources\ClientPerKlants\Widgets\AantalInactieveKlanten;
@@ -74,5 +75,13 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+
+    protected function getPages(): array
+    {
+        return [
+
+        ];
     }
 }

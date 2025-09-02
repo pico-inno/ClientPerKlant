@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ClientPerKlantsResource extends Resource
 {
@@ -23,6 +24,8 @@ class ClientPerKlantsResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'ClientPerKlants';
+    protected static ?string $title = 'Client Per Klant';
+
 
     public static function form(Schema $schema): Schema
     {

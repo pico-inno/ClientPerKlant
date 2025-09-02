@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\ClientPerKlants\Tables;
 
 use App\Models\ClientPerKlant;
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
@@ -15,7 +17,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 
 class ClientPerKlantsTable
 {
@@ -53,34 +54,57 @@ class ClientPerKlantsTable
             ->defaultPaginationPageOption(1000)
             ->paginationMode(PaginationMode::Cursor)
             ->filters([
+//                SelectFilter::make('recorded_month')
+//                    ->options(function () {
+//                        $months = ClientPerKlant::query()
+//                            ->selectRaw('DISTINCT DATE_FORMAT(recorded_month, "%Y-%m") as month_year, recorded_month')
+//                            ->orderBy('recorded_month', 'desc')
+//                            ->pluck('month_year', 'recorded_month')
+//                            ->unique()
+//                            ->map(function ($monthYear, $date) {
+//                                return Carbon::parse($date)->format('F Y');
+//                            })
+//                            ->all();
+//
+//                        return $months;
+//                    })
+//                    ->native(false)
+//                    ->query(function (Builder $query, array $data): Builder {
+//                        if (!empty($data['value'])) {
+//                            $query->whereYear('recorded_month', explode('-', $data['value'])[0])
+//                                ->whereMonth('recorded_month', explode('-', $data['value'])[1]);
+//                        }
+//                        return $query;
+//                    }),
 
-//                Filter::make('recorded_month')
-//                    ->schema([
-//                        DatePicker::make('recorded_month')
-//                            ->native(false),
-//                    ]),
-                SelectFilter::make('recorded_month')
-                    ->options(function () {
-                        $months = ClientPerKlant::query()
-                            ->selectRaw('DISTINCT DATE_FORMAT(recorded_month, "%Y-%m") as month_year, recorded_month')
-                            ->orderBy('recorded_month', 'desc')
-                            ->pluck('month_year', 'recorded_month')
-                            ->unique()
-                            ->map(function ($monthYear, $date) {
-                                return Carbon::parse($date)->format('F Y');
-                            })
-                            ->all();
-
-                        return $months;
-                    })
-                    ->searchable()
-                    ->native(false)
+                Filter::make('recorded_month')
+                    ->schema([
+                        DatePicker::make('recorded_month_from')
+                            ->placeholder(fn ($state): string => 'Dec 18, ' . now()->subYear()->format('Y')),
+                        DatePicker::make('recorded_month_to')
+                            ->placeholder(fn ($state): string => now()->format('M d, Y')),
+                    ])
                     ->query(function (Builder $query, array $data): Builder {
-                        if (!empty($data['value'])) {
-                            $query->whereYear('recorded_month', explode('-', $data['value'])[0])
-                                ->whereMonth('recorded_month', explode('-', $data['value'])[1]);
+                        return $query
+                            ->when(
+                                $data['recorded_month_from'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('recorded_month', '>=', $date),
+                            )
+                            ->when(
+                                $data['recorded_month_to'] ?? null,
+                                fn (Builder $query, $date): Builder => $query->whereDate('recorded_month', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['published_from'] ?? null) {
+                            $indicators['published_from'] = 'Published from ' . Carbon::parse($data['published_from'])->toFormattedDateString();
                         }
-                        return $query;
+                        if ($data['published_until'] ?? null) {
+                            $indicators['published_until'] = 'Published until ' . Carbon::parse($data['published_until'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
                     }),
                 TernaryFilter::make('aantal_inactieve_klanten')
                     ->native(false)
@@ -92,7 +116,7 @@ class ClientPerKlantsTable
                         false: fn (Builder $query) => $query->where('aantal_inactieve_klanten', 1),
                         blank: fn (Builder $query) => $query,
                     )
-            ], layout: FiltersLayout::AboveContent)
+            ])
             ->recordActions([
             ])
             ->toolbarActions([
