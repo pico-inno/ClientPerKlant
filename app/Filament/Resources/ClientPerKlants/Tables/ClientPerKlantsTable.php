@@ -8,10 +8,12 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -31,7 +33,8 @@ class ClientPerKlantsTable
                 TextColumn::make('aantal_actieve_clienten'),
                 TextColumn::make('aantal_inactieve_klanten'),
                 TextColumn::make('recorded_month')
-            ->sortable(),
+                    ->date('j M, Y')
+                    ->sortable(),
                 TextColumn::make('creator.name')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updater.name')
@@ -40,6 +43,11 @@ class ClientPerKlantsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('aantal_actieve_clienten')
+                    ->summarize(Sum::make()),
+                   TextColumn::make('aantal_actieve_clienten')
+                       ->label('Total Actieve Clienten')
+                       ->summarize(Sum::make())
             ])
             ->paginated([500, 1000, 2000, 'all'])
             ->defaultPaginationPageOption(1000)
@@ -50,12 +58,19 @@ class ClientPerKlantsTable
 //                        DatePicker::make('recorded_month')
 //                            ->native(false),
 //                    ]),
-                Filter::make('Active')
-                    ->query(fn (Builder $query): Builder => $query->where('aantal_inactieve_klanten', 0))
+
+                TernaryFilter::make('aantal_inactieve_klanten')
+                    ->native(false)
+                    ->placeholder('All Klanten')
+                    ->trueLabel('Active Klanten')
+                    ->falseLabel('Inactive Klanten')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('aantal_inactieve_klanten', 0),
+                        false: fn (Builder $query) => $query->where('aantal_inactieve_klanten', 1),
+                        blank: fn (Builder $query) => $query,
+                    )
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

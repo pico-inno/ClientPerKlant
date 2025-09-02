@@ -9,7 +9,7 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 
-class VerloopActieveClientenPerMaand extends TableWidget
+class VerloopActieveKlantenPerMaand extends TableWidget
 {
     protected int | string | array $columnSpan = 'full';
 
@@ -51,7 +51,7 @@ class VerloopActieveClientenPerMaand extends TableWidget
                     ->whereYear('recorded_month', $year)
                     ->whereRaw('MONTH(recorded_month) = ?', [$month])
                     ->where('aantal_inactieve_klanten', 0)
-                    ->sum('aantal_actieve_clienten') ?? 0;
+                    ->count() ?? 0;
             }
 
             return $monthData;

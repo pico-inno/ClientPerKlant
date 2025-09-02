@@ -8,6 +8,7 @@ use App\Filament\Resources\ClientPerKlants\Widgets\AantalActieveKlantenPerMaande
 use App\Filament\Resources\ClientPerKlants\Widgets\AantalInactieveKlanten;
 use App\Filament\Resources\ClientPerKlants\Widgets\StatsOverviewWidget;
 use App\Filament\Resources\ClientPerKlants\Widgets\VerloopActieveClientenPerMaand;
+use App\Filament\Resources\ClientPerKlants\Widgets\VerloopActieveKlantenPerMaand;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -53,6 +54,7 @@ class AdminPanelProvider extends PanelProvider
                     AantalActieveClientenPerMaandenJaar::class,
                     AantalActieveKlantenPerMaandenJaar::class,
                     VerloopActieveClientenPerMaand::class,
+                    VerloopActieveKlantenPerMaand::class,
             ])
             ->plugins([
                 FilamentApexChartsPlugin::make()
