@@ -50,8 +50,8 @@ class ClientPerKlantsTable
                        ->label('Total Actieve Clienten')
                        ->summarize(Sum::make())
             ])
-            ->paginated([500, 1000, 2000, 'all'])
-            ->defaultPaginationPageOption(1000)
+            ->paginated([100, 500, 1000, 2000, 3000, 'all'])
+            ->defaultPaginationPageOption(100)
             ->paginationMode(PaginationMode::Cursor)
             ->filters([
 //                SelectFilter::make('recorded_month')
