@@ -13,6 +13,7 @@ use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ClientPerKlantsTable
 {
@@ -44,12 +45,13 @@ class ClientPerKlantsTable
             ->defaultPaginationPageOption(1000)
             ->paginationMode(PaginationMode::Cursor)
             ->filters([
-                Filter::make('recorded_month')
-                    ->schema([
-                        DatePicker::make('recorded_month')
-                            ->native(false),
-                    ]),
-
+//                Filter::make('recorded_month')
+//                    ->schema([
+//                        DatePicker::make('recorded_month')
+//                            ->native(false),
+//                    ]),
+                Filter::make('Active')
+                    ->query(fn (Builder $query): Builder => $query->where('aantal_inactieve_klanten', 0))
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 ViewAction::make(),

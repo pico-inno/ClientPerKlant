@@ -34,9 +34,17 @@ class AantalActieveClientenPerMaandenJaar extends ChartWidget
             $yearData = ClientPerKlant::whereYear('recorded_month', $year)
                 ->orderBy('recorded_month')
                 ->get();
+
             foreach ($yearData as $record) {
                 $month = (int)date('n', strtotime($record->recorded_month)) - 1;
-                $monthlyData[$month] = $record->aantal_actieve_clienten;
+
+                $totalActiveValue = ClientPerKlant::query()
+                    ->whereYear('recorded_month', $year)
+                    ->whereRaw('MONTH(recorded_month) = ?', [$record->recorded_month->month])
+                    ->where('aantal_inactieve_klanten', 0)
+                    ->sum('aantal_actieve_clienten');
+
+                $monthlyData[$month] = $totalActiveValue;
             }
 
             $datasets[] = [
