@@ -61,7 +61,7 @@ class VerloopActieveClientenPerMaand extends TableWidget
         })->toArray();
 
 //        dd($formatted);
-        $years = [2022, 2023];
+//        $years = [2022, 2023];
         $columns = [TextColumn::make('month')->label('Month')];
 
         foreach ($years as $year) {
