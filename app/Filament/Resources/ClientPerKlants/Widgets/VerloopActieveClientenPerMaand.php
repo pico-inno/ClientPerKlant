@@ -18,7 +18,6 @@ class VerloopActieveClientenPerMaand extends TableWidget
         return $table
             ->query(fn (): Builder => ClientPerKlant::query())
             ->columns([
-
                 TextColumn::make('instelling_id')
                     ->numeric()
                     ->sortable(),
