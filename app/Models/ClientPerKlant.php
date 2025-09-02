@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class ClientPerKlant extends Model
 {
@@ -20,12 +21,44 @@ class ClientPerKlant extends Model
     ];
 
     protected $casts = [
-//        'recorded_month' => 'date:Y-m',
+        'recorded_month' => 'date',
         'aantal_actieve_clienten' => 'integer',
         'aantal_inactieve_klanten' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+                $model->created_by = Auth::id() ?? 1;
+                $model->updated_by = Auth::id() ?? 1;
+
+        });
+        static::updating(function ($model) {
+                $model->updated_by = Auth::id() ?? 1;
+        });
+
+
+    }
+    public function getYearAttribute()
+    {
+        return explode('-', $this->recorded_month)[0] ?? null;
+    }
+
+
+    public function getMonthAttribute()
+    {
+        return explode('-', $this->recorded_month)[1] ?? null;
+    }
+
+
+
+
+
+
 
     /**
      * Get the total number of clients (active + inactive)

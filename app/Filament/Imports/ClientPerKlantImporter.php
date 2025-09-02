@@ -32,14 +32,7 @@ class ClientPerKlantImporter extends Importer
                 ->rules(['required', 'integer']),
             ImportColumn::make('recorded_month')
                 ->requiredMapping(false)
-                ->rules(['required', 'max:255']),
-            ImportColumn::make('created_by')
-                ->requiredMapping()
-                ->numeric()
-                ->rules(['required', 'integer']),
-            ImportColumn::make('updated_by')
-                ->numeric()
-                ->rules(['integer']),
+                ->rules(['required', 'date']),
         ];
     }
 

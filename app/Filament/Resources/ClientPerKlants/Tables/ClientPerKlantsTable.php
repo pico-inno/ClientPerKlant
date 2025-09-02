@@ -19,13 +19,18 @@ class ClientPerKlantsTable
     public static function configure(Table $table): Table
     {
         return $table
-//            ->query(ClientPerKlant::)
             ->columns([
+                TextColumn::make('row_number')
+                    ->label('No')
+                    ->getStateUsing(function ($record, $rowLoop) {
+                        return $rowLoop->iteration;
+                    }),
                 TextColumn::make('instelling_id'),
                 TextColumn::make('instelling_naam'),
                 TextColumn::make('aantal_actieve_clienten'),
                 TextColumn::make('aantal_inactieve_klanten'),
-                TextColumn::make('recorded_month'),
+                TextColumn::make('recorded_month')
+            ->sortable(),
                 TextColumn::make('creator.name')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updater.name')
@@ -42,8 +47,7 @@ class ClientPerKlantsTable
                 Filter::make('recorded_month')
                     ->schema([
                         DatePicker::make('recorded_month')
-                            ->native(false)
-                            ->displayFormat('F Y'),
+                            ->native(false),
                     ]),
 
             ], layout: FiltersLayout::AboveContent)

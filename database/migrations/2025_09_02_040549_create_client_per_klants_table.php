@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('instelling_naam');
             $table->unsignedBigInteger('aantal_actieve_clienten')->default(0);
             $table->unsignedBigInteger('aantal_inactieve_klanten')->default(0);
-            $table->string('recorded_month');
+            $table->date('recorded_month');
             $table->unsignedBigInteger('created_by');
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
