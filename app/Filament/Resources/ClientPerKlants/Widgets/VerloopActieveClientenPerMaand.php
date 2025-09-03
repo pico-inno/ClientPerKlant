@@ -10,13 +10,28 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
 class VerloopActieveClientenPerMaand extends TableWidget
 {
+
+    protected ?string $pollingInterval = null;
     protected int | string | array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
+        $years = Cache::remember('recorded_month_by_years', now()->addHours(2), function () {
+            return ClientPerKlant::select('recorded_month')
+                ->distinct()
+                ->get()
+                ->pluck('year')
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values();
+        });
+
+        $formatted = Cache::remember('table_ver_loop_clienten', now()->addHours(2), function () use ($years) {
         $result = ClientPerKlant::selectRaw('
                 YEAR(recorded_month) as year,
                 MONTH(recorded_month) as month,
@@ -26,29 +41,18 @@ class VerloopActieveClientenPerMaand extends TableWidget
             ->orderBy('year')
             ->orderBy('month')
             ->get();
-        $years = ClientPerKlant::select('recorded_month')
-            ->distinct()
-            ->get()
-            ->pluck('year')
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
 
         $monthNames = [
             1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'May', 6 => 'Jun',
             7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'
         ];
 
-        $formatted = collect(range(1, 12))->map(function($month) use ($monthNames, $years, $result) {
+        return collect(range(1, 12))->map(function($month) use ($monthNames, $years, $result) {
             $monthData = [
                 'month' => $monthNames[$month]
             ];
 
             foreach ($years as $year) {
-                $value = $result->firstWhere('month', $month, function() use ($year) {
-                    return ['year' => $year, 'total' => 0];
-                });
                 $monthData[$year] = ClientPerKlant::query()
                     ->whereYear('recorded_month', $year)
                     ->whereRaw('MONTH(recorded_month) = ?', [$month])
@@ -57,7 +61,8 @@ class VerloopActieveClientenPerMaand extends TableWidget
             }
 
             return $monthData;
-        })->toArray();
+            })->toArray();
+        });
 
         $columns = [TextColumn::make('month')->label('Month')];
 

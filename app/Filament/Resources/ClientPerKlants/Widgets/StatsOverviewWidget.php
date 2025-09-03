@@ -7,10 +7,12 @@ use Carbon\Carbon;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget as BaseStatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Number;
 
 class StatsOverviewWidget extends BaseStatsOverviewWidget
 {
+    protected ?string $pollingInterval = null;
     use InteractsWithPageFilters;
 
     public function getColumns(): int | array
@@ -19,7 +21,8 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
     }
     protected function getStats(): array
     {
-        $date = ClientPerKlant::query()->latest()->first();
+        return Cache::remember('widget_count', now()->addHours(2), function () {
+        $date = ClientPerKlant::query()->latest('recorded_month')->first();
         if ($date) {
             $latestYear = explode('-', $date->recorded_month)[0];
             $latestMonth = explode('-', $date->recorded_month)[1];
@@ -43,5 +46,6 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
                 ->descriptionIcon('heroicon-m-arrow-trending-down')
                 ->color('danger'),
         ];
+        });
     }
 }

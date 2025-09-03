@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class ClientPerKlant extends Model
 {
@@ -27,7 +28,7 @@ class ClientPerKlant extends Model
         'created_by' => 'integer',
         'updated_by' => 'integer',
     ];
-
+    protected $appends = ['year', 'month', 'active_count'];
     protected static function boot()
     {
         parent::boot();
@@ -42,7 +43,40 @@ class ClientPerKlant extends Model
         });
 
 
+        static::created(function ($model) {
+            Cache::forget('widget_count');
+            Cache::forget('recorded_month_by_years');
+            Cache::forget('all_total_aantal_actieve_clienten');
+            Cache::forget('all_active_count');
+
+            Cache::forget('table_ver_loop_clienten');
+            Cache::forget('table_ver_loop_klanten');
+        });
+
+
+        static::deleted(function ($model) {
+            Cache::forget('widget_count');
+            Cache::forget('recorded_month_by_years');
+            Cache::forget('all_total_aantal_actieve_clienten');
+            Cache::forget('all_active_count');
+
+            Cache::forget('table_ver_loop_clienten');
+            Cache::forget('table_ver_loop_klanten');
+        });
+
+
+        static::updated(function ($model) {
+            Cache::forget('widget_count');
+            Cache::forget('recorded_month_by_years');
+            Cache::forget('all_total_aantal_actieve_clienten');
+            Cache::forget('all_active_count');
+
+            Cache::forget('table_ver_loop_clienten');
+            Cache::forget('table_ver_loop_klanten');
+        });
+
     }
+
     public function getYearAttribute()
     {
         return explode('-', $this->recorded_month)[0] ?? null;

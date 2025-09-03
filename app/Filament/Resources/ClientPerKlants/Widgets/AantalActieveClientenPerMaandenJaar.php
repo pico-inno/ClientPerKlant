@@ -4,60 +4,65 @@ namespace App\Filament\Resources\ClientPerKlants\Widgets;
 
 use App\Models\ClientPerKlant;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class AantalActieveClientenPerMaandenJaar extends ChartWidget
 {
+    protected ?string $pollingInterval = null;
     protected ?string $heading = 'Aantal Actieve Clienten Per Maanden';
 
     protected function getData(): array
     {
-        $years = ClientPerKlant::select('recorded_month')
-            ->distinct()
-            ->get()
-            ->pluck('year')
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
+        $years = Cache::remember('recorded_month_by_years', now()->addHours(2), function () {
+            return ClientPerKlant::select('recorded_month')
+                        ->distinct()
+                        ->get()
+                        ->pluck('year')
+                        ->filter()
+                        ->unique()
+                        ->sort()
+                        ->values();
+        });
 
+        $allData = Cache::remember('all_total_aantal_actieve_clienten', now()->addHours(2), function () {
+            return ClientPerKlant::select([
+                DB::raw('YEAR(recorded_month) as year'),
+                DB::raw('MONTH(recorded_month) as month'),
+                DB::raw( 'SUM(CASE WHEN aantal_inactieve_klanten = 0 THEN aantal_actieve_clienten ELSE 0 END) as total_aantal_actieve_clienten
+                ')
+            ])
+                ->groupBy(DB::raw('YEAR(recorded_month), MONTH(recorded_month)'))
+                ->orderBy('year')
+                ->orderBy('month')
+                ->toBase()
+                ->get();
+        });
 
         $colors = ['#36A2EB', '#FF6384', '#4BC0C0', '#FF9F40', '#9966FF', '#FFCD56', '#C9CBCF'];
-        $datasets = [];
-        $colorIndex = 0;
-
-
         $monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        foreach ($years as $index => $year) {
+            $yearData = $allData->where('year', $year);
 
-        foreach ($years as $year) {
             $monthlyData = array_fill(0, 12, 0);
 
-            $yearData = ClientPerKlant::whereYear('recorded_month', $year)
-                ->orderBy('recorded_month')
-                ->get();
-
-            foreach ($yearData as $record) {
-                $month = (int)date('n', strtotime($record->recorded_month)) - 1;
-
-                $totalActiveValue = ClientPerKlant::query()
-                    ->whereYear('recorded_month', $year)
-                    ->whereRaw('MONTH(recorded_month) = ?', [$record->recorded_month->month])
-                    ->where('aantal_inactieve_klanten', 0)
-                    ->sum('aantal_actieve_clienten');
-
-                $monthlyData[$month] = $totalActiveValue;
+            foreach ($yearData as $data) {
+                $month = (int)$data->month;
+                if ($month >= 1 && $month <= 12) {
+                    $monthIndex = $month - 1;
+                    $monthlyData[$monthIndex] = (int)$data->total_aantal_actieve_clienten;
+                }
             }
 
             $datasets[] = [
-                'label' => $year,
+                'label' => (string)$year,
                 'data' => $monthlyData,
-                'backgroundColor' => $colors[$colorIndex % count($colors)],
-                'borderColor' => $colors[$colorIndex % count($colors)],
+                'backgroundColor' => $colors[$index % count($colors)],
+                'borderColor' => $colors[$index % count($colors)],
                 'fill' => false,
                 'tension' => 0.1
             ];
-            $colorIndex++;
         }
-
         return [
             'datasets' => $datasets,
             'labels' => $monthLabels,

@@ -6,6 +6,7 @@ use App\Models\ClientPerKlant;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Number;
 
 class ClientPerKlantImporter extends Importer
@@ -48,7 +49,13 @@ class ClientPerKlantImporter extends Importer
         if ($failedRowsCount = $import->getFailedRowsCount()) {
             $body .= ' ' . Number::format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to import.';
         }
+        Cache::forget('widget_count');
+        Cache::forget('recorded_month_by_years');
+        Cache::forget('all_total_aantal_actieve_clienten');
+        Cache::forget('all_active_count');
 
+        Cache::forget('table_ver_loop_clienten');
+        Cache::forget('table_ver_loop_klanten');
         return $body;
     }
 }
