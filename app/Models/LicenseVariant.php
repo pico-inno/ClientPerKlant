@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LicenseVariant extends Model
 {
+    protected $table = 'license_variants';
     protected $fillable = ['name', 'license_id'];
 
     public function license()

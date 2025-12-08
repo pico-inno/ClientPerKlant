@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Instelling extends Model
 {
+    protected $table = 'instellingen';
     protected $fillable = [
         'instelling_id',
         'instelling_naam',
