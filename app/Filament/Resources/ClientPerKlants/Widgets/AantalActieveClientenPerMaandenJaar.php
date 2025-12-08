@@ -64,7 +64,7 @@ class AantalActieveClientenPerMaandenJaar extends ChartWidget
             ];
         }
         return [
-            'datasets' => $datasets,
+            'datasets' => $datasets ?? [],
             'labels' => $monthLabels,
         ];
     }
