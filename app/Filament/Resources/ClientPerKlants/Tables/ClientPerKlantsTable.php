@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\ClientPerKlants\Tables;
 
 use App\Models\ClientPerKlant;
+use App\Models\Instelling;
+use App\Models\License;
 use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -18,6 +20,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class ClientPerKlantsTable
 {
@@ -55,29 +58,6 @@ class ClientPerKlantsTable
             ->defaultPaginationPageOption(100)
             ->paginationMode(PaginationMode::Cursor)
             ->filters([
-//                SelectFilter::make('recorded_month')
-//                    ->options(function () {
-//                        $months = ClientPerKlant::query()
-//                            ->selectRaw('DISTINCT DATE_FORMAT(recorded_month, "%Y-%m") as month_year, recorded_month')
-//                            ->orderBy('recorded_month', 'desc')
-//                            ->pluck('month_year', 'recorded_month')
-//                            ->unique()
-//                            ->map(function ($monthYear, $date) {
-//                                return Carbon::parse($date)->format('F Y');
-//                            })
-//                            ->all();
-//
-//                        return $months;
-//                    })
-//                    ->native(false)
-//                    ->query(function (Builder $query, array $data): Builder {
-//                        if (!empty($data['value'])) {
-//                            $query->whereYear('recorded_month', explode('-', $data['value'])[0])
-//                                ->whereMonth('recorded_month', explode('-', $data['value'])[1]);
-//                        }
-//                        return $query;
-//                    }),
-
                 Filter::make('recorded_month')
                     ->schema([
                         DatePicker::make('recorded_month_from')
@@ -116,8 +96,26 @@ class ClientPerKlantsTable
                         true: fn (Builder $query) => $query->where('aantal_inactieve_klanten', 0),
                         false: fn (Builder $query) => $query->where('aantal_inactieve_klanten', 1),
                         blank: fn (Builder $query) => $query,
-                    )
-            ])
+                    ),
+                SelectFilter::make('license_id')
+                    ->label('License')
+                    ->options(License::pluck('name', 'id')->toArray())
+                    ->query(function (Builder $query, array $data) {
+                        if (!isset($data['value']) || $data['value'] === null) {
+                            return $query;
+                        }
+
+                        info("APPLY LICENSE FILTER: " . $data['value']);
+                        $instellingIds = Instelling::where('license_id', $data['value'])
+                            ->pluck('instelling_id')
+                            ->toArray();
+
+                        return $query->whereIn('instelling_id', $instellingIds);
+
+                    })
+
+
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([
             ])
             ->toolbarActions([

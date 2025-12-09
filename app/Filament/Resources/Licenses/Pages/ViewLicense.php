@@ -3,22 +3,17 @@
 namespace App\Filament\Resources\Licenses\Pages;
 
 use App\Filament\Resources\Licenses\LicenseResource;
-use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
 
-class EditLicense extends EditRecord
+class ViewLicense extends ViewRecord
 {
     protected static string $resource = LicenseResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-//            DeleteAction::make(),
+            EditAction::make(),
         ];
-    }
-
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
     }
 }

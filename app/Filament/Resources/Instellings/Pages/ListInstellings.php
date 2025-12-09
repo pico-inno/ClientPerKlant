@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Instellings\Pages;
 
+use App\Filament\Imports\InstellingImporter;
 use App\Filament\Resources\Instellings\InstellingResource;
 use Filament\Actions\CreateAction;
+use Filament\Actions\ImportAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListInstellings extends ListRecords
@@ -14,6 +16,8 @@ class ListInstellings extends ListRecords
     {
         return [
             CreateAction::make(),
+            ImportAction::make()
+                ->importer(InstellingImporter::class),
         ];
     }
 }
