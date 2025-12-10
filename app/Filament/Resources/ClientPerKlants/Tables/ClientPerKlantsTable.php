@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ClientPerKlants\Tables;
 use App\Models\ClientPerKlant;
 use App\Models\Instelling;
 use App\Models\License;
+use App\Models\LicenseVariant;
 use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -101,18 +102,44 @@ class ClientPerKlantsTable
                     ->label('License')
                     ->options(License::pluck('name', 'id')->toArray())
                     ->query(function (Builder $query, array $data) {
-                        if (!isset($data['value']) || $data['value'] === null) {
+                        if (empty($data['value'])) {
                             return $query;
                         }
 
-                        info("APPLY LICENSE FILTER: " . $data['value']);
-                        $instellingIds = Instelling::where('license_id', $data['value'])
+                        $licenseId = $data['value'];
+
+                        $instellingIds = Instelling::where('license_id', $licenseId)
                             ->pluck('instelling_id')
                             ->toArray();
 
                         return $query->whereIn('instelling_id', $instellingIds);
+                    }),
+                SelectFilter::make('license_variant_id')
+                    ->label('License Variant')
+                    ->options(LicenseVariant::pluck('name', 'id')->toArray())
+                    ->query(function (Builder $query, array $data) {
 
-                    })
+                        // no variant selected → skip
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        $variantId = $data['value'];
+
+                        // extract selected license from all filter data
+                        $selectedLicenseId = $data['query']['license_id'] ?? null;
+
+                        $instellings = Instelling::query()
+                            ->when($selectedLicenseId, fn ($q) =>
+                            $q->where('license_id', $selectedLicenseId)
+                            )
+                            ->where('license_variant_id', $variantId)
+                            ->pluck('instelling_id')
+                            ->toArray();
+
+                        return $query->whereIn('instelling_id', $instellings);
+                    }),
+
 
 
             ], layout: FiltersLayout::AboveContent)

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ClientPerKlants\Widgets;
 
 use App\Models\ClientPerKlant;
+use App\Models\Instelling;
 use Carbon\Carbon;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget as BaseStatsOverviewWidget;
@@ -12,6 +13,7 @@ use Illuminate\Support\Number;
 
 class StatsOverviewWidget extends BaseStatsOverviewWidget
 {
+    use InteractsWithPageFilters;
     protected ?string $pollingInterval = null;
     use InteractsWithPageFilters;
 
@@ -21,16 +23,26 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
     }
     protected function getStats(): array
     {
-        return Cache::remember('widget_count', now()->addHours(2), function () {
+        $licenseId = $this->filters['license_id'] ?? null;
+        $licenseVariantId = $this->filters['license_variant_id'] ?? null;
+
+        $instellingIds = Instelling::query()
+            ->when($licenseId, fn ($q) => $q->where('license_id', $licenseId))
+            ->when($licenseVariantId, fn ($q) => $q->where('license_variant_id', $licenseVariantId))
+            ->pluck('instelling_id')
+            ->toArray();
+//        return Cache::remember('widget_count', now()->addHours(2), function () {
         $date = ClientPerKlant::query()->latest('recorded_month')->first();
         if ($date) {
             $latestYear = explode('-', $date->recorded_month)[0];
             $latestMonth = explode('-', $date->recorded_month)[1];
 
             $totalActieveKlanten = ClientPerKlant::whereYear('recorded_month', $latestYear)
+                ->whereIn('instelling_id', $instellingIds)
                 ->whereMonth('recorded_month', $latestMonth)
                 ->where('aantal_inactieve_klanten', 0)->count();
             $totalActieveClienten = ClientPerKlant::whereYear('recorded_month', $latestYear)
+                ->whereIn('instelling_id', $instellingIds)
                 ->whereMonth('recorded_month', $latestMonth)
                 ->where('aantal_inactieve_klanten', 0)->sum('aantal_actieve_clienten');
         }else{
@@ -46,6 +58,6 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
                 ->descriptionIcon('heroicon-m-arrow-trending-down')
                 ->color('danger'),
         ];
-        });
+//        });
     }
 }

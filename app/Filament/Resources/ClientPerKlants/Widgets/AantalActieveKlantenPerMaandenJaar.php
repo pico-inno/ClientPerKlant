@@ -3,19 +3,30 @@
 namespace App\Filament\Resources\ClientPerKlants\Widgets;
 
 use App\Models\ClientPerKlant;
+use App\Models\Instelling;
 use Filament\Widgets\ChartWidget;
+use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class AantalActieveKlantenPerMaandenJaar extends ChartWidget
 {
+    use InteractsWithPageFilters;
     protected ?string $pollingInterval = null;
     protected ?string $heading = 'Aantal Actieve Klanten Per Maanden';
-
+    protected ?string $maxHeight = '650px';
     protected function getData(): array
     {
-        $years = Cache::remember('recorded_month_by_years', now()->addHours(2), function () {
-            return ClientPerKlant::select('recorded_month')
+        $licenseId = $this->filters['license_id'] ?? null;
+        $licenseVariantId = $this->filters['license_variant_id'] ?? null;
+
+        $instellingIds = Instelling::query()
+            ->when($licenseId, fn ($q) => $q->where('license_id', $licenseId))
+            ->when($licenseVariantId, fn ($q) => $q->where('license_variant_id', $licenseVariantId))
+            ->pluck('instelling_id')
+            ->toArray();
+//        $years = Cache::remember('recorded_month_by_years', now()->addHours(2), function () {
+            $years = ClientPerKlant::select('recorded_month')
                 ->distinct()
                 ->get()
                 ->pluck('year')
@@ -23,20 +34,21 @@ class AantalActieveKlantenPerMaandenJaar extends ChartWidget
                 ->unique()
                 ->sort()
                 ->values();
-        });
+//        });
 
-        $allData = Cache::remember('all_active_count', now()->addHours(2), function () {
-            return ClientPerKlant::select([
+//        $allData = Cache::remember('all_active_count', now()->addHours(2), function () {
+            $allData = ClientPerKlant::select([
                     DB::raw('YEAR(recorded_month) as year'),
                     DB::raw('MONTH(recorded_month) as month'),
                     DB::raw('COUNT(CASE WHEN aantal_inactieve_klanten = 0 THEN 1 END) as active_count')
                 ])
+                ->whereIn('instelling_id', $instellingIds)
                     ->groupBy(DB::raw('YEAR(recorded_month), MONTH(recorded_month)'))
                     ->orderBy('year')
                     ->orderBy('month')
                     ->toBase()
                     ->get();
-        });
+//        });
 
 
         $colors = ['#36A2EB', '#FF6384', '#4BC0C0', '#FF9F40', '#9966FF', '#FFCD56', '#C9CBCF'];

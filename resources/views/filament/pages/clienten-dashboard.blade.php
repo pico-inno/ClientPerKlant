@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    {{ $this->filtersForm }}
     {{-- Page content --}}
     @if ($this->isFullscreen())
         <style>
