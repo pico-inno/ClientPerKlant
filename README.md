@@ -83,7 +83,7 @@ sudo chmod -R 775 storage bootstrap/cache
 ### Default User Account
 
 ```bash
-Email: admin@app.com
+Email: test@example.com
 
 Password: password
 ```
