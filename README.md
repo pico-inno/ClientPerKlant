@@ -1,7 +1,11 @@
 # Deployment Guide: ClientPerKlant
 
 Follow these steps to deploy the application to a production server (Ubuntu/Nginx/MySQL).
-
+### Prerequisites
+*   PHP 8.3 or higher
+*   Composer 8.2
+*   Node.js & NPM
+* 
 ### 1. Clone Repository
 Navigate to the web directory and clone the source code.
 
