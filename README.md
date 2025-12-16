@@ -79,3 +79,11 @@ sudo chown -R www-data:www-data /var/www/client-per-klant
 
 sudo chmod -R 775 storage bootstrap/cache
 ```
+
+### Default User Account
+
+```bash
+Email: admin@app.com
+
+Password: password
+```
