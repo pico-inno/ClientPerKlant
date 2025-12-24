@@ -45,8 +45,8 @@ class AantalActieveClientenPerMaandenJaar extends ChartWidget
                 DB::raw( 'SUM(CASE WHEN aantal_inactieve_klanten = 0 THEN aantal_actieve_clienten ELSE 0 END) as total_aantal_actieve_clienten
                 ')
             ])
-                ->whereIn('instelling_id', $instellingIds)
-                ->groupBy(DB::raw('YEAR(recorded_month), MONTH(recorded_month)'))
+            ->when($instellingIds, fn ($q) => $q->whereIn('instelling_id', $instellingIds))
+            ->groupBy(DB::raw('YEAR(recorded_month), MONTH(recorded_month)'))
                 ->orderBy('year')
                 ->orderBy('month')
                 ->toBase()
