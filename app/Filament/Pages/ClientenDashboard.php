@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
@@ -25,29 +26,40 @@ class ClientenDashboard extends Page
 
     public function filtersForm(Schema $schema): Schema
     {
-        return $schema->schema([
-            Select::make('year')
-                ->label('Year')
-                ->options([
-                    2024 => '2024',
-                    2025 => '2025',
-                ]),
+        return $schema
+            ->components([
+                Section::make()
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Select::make('license_id')
+                                    ->options(function () {
+                                        return \App\Models\License::pluck('name', 'id');
+                                    })
+                                    ->searchable()
+                                    ->preload()
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(fn (callable $set) => $set('license_variant_id', null)),
 
-            Select::make('month')
-                ->label('Month')
-                ->options([
-                    '01' => 'January',
-                    '02' => 'February',
-                    '03' => 'March',
-                ]),
+                                Select::make('license_variant_id')
+                                    ->label('License Variant')
+                                    ->options(function (callable $get) {
+                                        $licenseId = $get('license_id');
 
-            Select::make('status')
-                ->label('Status')
-                ->options([
-                    'active'   => 'Active',
-                    'inactive' => 'Inactive',
-                ]),
-        ]);
+                                        if (! $licenseId) {
+                                            return [];
+                                        }
+
+                                        return \App\Models\LicenseVariant::where('license_id', $licenseId)
+                                            ->pluck('name', 'id');
+                                    })
+                                    ->searchable()
+                                    ->preload()
+                                    ->required(),
+                            ]),
+                    ])->columnSpanFull(),
+            ]);
     }
 
 
@@ -67,7 +79,7 @@ class ClientenDashboard extends Page
     protected static string|null|\BackedEnum $navigationIcon = Heroicon::OutlinedRectangleStack;
 
 
-    protected function getHeaderWidgets(): array
+    protected function getFooterWidgets(): array
     {
         return [
             AantalActieveClientenPerMaandenJaar::class,

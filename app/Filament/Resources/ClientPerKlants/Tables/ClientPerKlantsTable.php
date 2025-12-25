@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
@@ -59,34 +60,28 @@ class ClientPerKlantsTable
             ->defaultPaginationPageOption(100)
             ->paginationMode(PaginationMode::Cursor)
             ->filters([
-                Filter::make('recorded_month')
-                    ->schema([
-                        DatePicker::make('recorded_month_from')
-                            ->placeholder(fn ($state): string => 'Dec 18, ' . now()->subYear()->format('Y')),
-                        DatePicker::make('recorded_month_to')
-                            ->placeholder(fn ($state): string => now()->format('M d, Y')),
+                Filter::make('recorded_year')
+                    ->form([
+                        Select::make('year')
+                            ->label('Year')
+                            ->native(false)
+                            ->options(
+                                collect(range(now()->year, now()->year - 10))
+                                    ->mapWithKeys(fn ($year) => [$year => $year])
+                            )
+                            ->placeholder('Select year'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['recorded_month_from'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('recorded_month', '>=', $date),
-                            )
-                            ->when(
-                                $data['recorded_month_to'] ?? null,
-                                fn (Builder $query, $date): Builder => $query->whereDate('recorded_month', '<=', $date),
-                            );
+                        return $query->when(
+                            $data['year'] ?? null,
+                            fn (Builder $query, $year) =>
+                            $query->whereYear('recorded_month', $year)
+                        );
                     })
                     ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        if ($data['published_from'] ?? null) {
-                            $indicators['published_from'] = 'Published from ' . Carbon::parse($data['published_from'])->toFormattedDateString();
-                        }
-                        if ($data['published_until'] ?? null) {
-                            $indicators['published_until'] = 'Published until ' . Carbon::parse($data['published_until'])->toFormattedDateString();
-                        }
-
-                        return $indicators;
+                        return isset($data['year'])
+                            ? ['year' => 'Year: ' . $data['year']]
+                            : [];
                     }),
                 TernaryFilter::make('aantal_inactieve_klanten')
                     ->native(false)
@@ -100,7 +95,8 @@ class ClientPerKlantsTable
                     ),
                 SelectFilter::make('license_id')
                     ->label('License')
-                    ->options(License::pluck('name', 'id')->toArray())
+                    ->options(fn () => License::query()->pluck('name', 'id')->toArray() ?? [])
+                    ->getOptionLabelUsing(fn ($value) => License::find($value)?->name)
                     ->query(function (Builder $query, array $data) {
                         if (empty($data['value'])) {
                             return $query;
@@ -116,8 +112,10 @@ class ClientPerKlantsTable
                     }),
                 SelectFilter::make('license_variant_id')
                     ->label('License Variant')
-                    ->options(LicenseVariant::pluck('name', 'id')->toArray())
-                    ->query(function (Builder $query, array $data) {
+                        ->options(fn () => LicenseVariant::query()->pluck('name', 'id')->toArray() ?? [])
+                    ->getOptionLabelUsing(fn ($value) => License::find($value)?->name)
+
+                        ->query(function (Builder $query, array $data) {
 
                         // no variant selected → skip
                         if (empty($data['value'])) {

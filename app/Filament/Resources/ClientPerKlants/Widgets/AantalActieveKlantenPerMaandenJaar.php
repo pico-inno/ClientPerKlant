@@ -14,7 +14,9 @@ class AantalActieveKlantenPerMaandenJaar extends ChartWidget
     use InteractsWithPageFilters;
     protected ?string $pollingInterval = null;
     protected ?string $heading = 'Aantal Actieve Klanten Per Maanden';
-    protected ?string $maxHeight = '650px';
+    protected ?string $maxHeight = '400px';
+    protected int|string|array $columnSpan = 'full';
+
     protected function getData(): array
     {
         $licenseId = $this->filters['license_id'] ?? null;
