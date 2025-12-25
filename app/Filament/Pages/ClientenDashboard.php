@@ -101,7 +101,18 @@ class ClientenDashboard extends Page
                 ->icon(fn () => $this->isFullscreen()
                     ? 'heroicon-o-arrows-pointing-in'
                     : 'heroicon-o-arrows-pointing-out')
-                ->url(fn () => url()->current() . ($this->isFullscreen() ? '' : '?fullscreen=1')),
+                ->url(function () {
+                    $query = request()->query();
+
+                    if ($this->isFullscreen()) {
+                        unset($query['fullscreen']);
+                    } else {
+                        $query['fullscreen'] = 1;
+                    }
+
+                    return url('admin/clienten-dashboard')
+                        . ($query ? '?' . http_build_query($query) : '');
+                }),
         ];
     }
 

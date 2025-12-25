@@ -94,7 +94,18 @@ class KlantenDashboard extends Page
                 ->icon(fn () => $this->isFullscreen()
                     ? 'heroicon-o-arrows-pointing-in'
                     : 'heroicon-o-arrows-pointing-out')
-                ->url(fn () => url()->current() . ($this->isFullscreen() ? '' : '?fullscreen=1')),
+                ->url(function () {
+                    $query = request()->query();
+
+                    if ($this->isFullscreen()) {
+                        unset($query['fullscreen']);
+                    } else {
+                        $query['fullscreen'] = 1;
+                    }
+
+                    return url('admin/klanten-dashboard')
+                        . ($query ? '?' . http_build_query($query) : '');
+                }),
         ];
     }
 }
